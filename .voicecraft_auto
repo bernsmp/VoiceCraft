@@ -1,0 +1,10 @@
+# VoiceCraft Auto-Run Configuration
+# Set AUTO_SCAN=1 to enable automatic scanning
+AUTO_SCAN=1
+
+# Set AUTO_YES=1 to skip all confirmation prompts
+AUTO_YES=1
+
+# Set AUTO_UPDATE=1 to auto-update summary on file changes
+AUTO_UPDATE=1
+

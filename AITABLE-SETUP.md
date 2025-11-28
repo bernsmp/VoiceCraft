@@ -1,0 +1,71 @@
+# AITable.ai Quick Setup Guide
+
+## 🚀 5-Minute Setup
+
+### Step 1: Create AITable Table (2 minutes)
+
+1. Go to [AITable.ai](https://aitable.ai/)
+2. Create new database: "Article Pipeline"
+3. Create table: "Articles"
+4. Add these fields:
+
+| Field Name | Type | Options |
+|------------|------|---------|
+| `title` | Single line text | - |
+| `topic` | Single line text | - |
+| `status` | Single select | Options: Draft, Editing, Published |
+| `draft_content` | Long text | - |
+| `edited_content` | Long text | - |
+| `final_content` | Long text | - |
+| `word_count` | Number | - |
+| `generated_date` | Date | - |
+| `published_date` | Date | - |
+| `publish_url` | URL | - |
+| `platform` | Single select | Options: Substack, WordPress, LinkedIn |
+| `notes` | Long text | - |
+
+5. **Get your IDs:**
+   - Database ID: From URL `https://aitable.ai/dst/{DATABASE_ID}/...`
+   - Table ID: From URL `https://aitable.ai/dst/{DB_ID}/.../{TABLE_ID}`
+   - API Token: Settings → API → Create token
+
+### Step 2: Add to VoiceCraft (1 minute)
+
+Add to `.env.local`:
+
+```bash
+AITABLE_API_TOKEN=your_token_here
+AITABLE_BASE_URL=https://aitable.ai/api/v1
+AITABLE_DATABASE_ID=your_database_id
+AITABLE_TABLE_ID=your_table_id
+```
+
+### Step 3: Test (2 minutes)
+
+```bash
+# Generate an article - it will auto-save to AITable
+python3 cli/workflow.py create "Test article topic"
+```
+
+Check AITable - you should see a new record with status "Draft"!
+
+---
+
+## ✅ That's It!
+
+Now every article you generate will automatically:
+- ✅ Appear in AITable as "Draft"
+- ✅ Include title, topic, content, word count
+- ✅ Be ready for your edit → publish workflow
+
+---
+
+## 🔄 Next: Activepieces Automation
+
+Once AITable is working, set up Activepieces to:
+1. Watch for new "Draft" records
+2. Send you notifications
+3. Auto-publish when status = "Published"
+
+See `INTEGRATION-AITABLE-ACTIVEPIECES.md` for details.
+

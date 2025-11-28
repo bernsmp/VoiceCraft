@@ -1,0 +1,67 @@
+{
+  "instructions": "Add your Substack article metrics here. Get URLs from your dashboard and add metrics.",
+  "format": {
+    "article_url": {
+      "views": 0,
+      "opened": 0,
+      "subs": 0,
+      "likes": 0,
+      "comments": 0,
+      "shares": 0
+    }
+  },
+  "examples_from_your_dashboard": {
+    "https://irreplaceablepositioning.substack.com/p/why-your-brain-ignores-better-and": {
+      "views": 1260,
+      "opened": 35,
+      "subs": 4
+    },
+    "https://irreplaceablepositioning.substack.com/p/your-best-work-is-dying-with-you": {
+      "views": 1380,
+      "opened": 34,
+      "subs": 1
+    },
+    "https://irreplaceablepositioning.substack.com/p/i-have-12-years-of-experience-but": {
+      "views": 585,
+      "opened": 41,
+      "subs": 10
+    },
+    "https://irreplaceablepositioning.substack.com/p/why-your-best-ideas-come-from-conversations": {
+      "views": 425,
+      "opened": 42,
+      "subs": 5
+    },
+    "https://irreplaceablepositioning.substack.com/p/how-mcdonalds-cracked-the-code": {
+      "views": 376,
+      "opened": 44,
+      "subs": 3
+    },
+    "https://irreplaceablepositioning.substack.com/p/youre-not-using-ai-wrong": {
+      "views": 356,
+      "opened": 58,
+      "subs": 7
+    },
+    "https://irreplaceablepositioning.substack.com/p/the-50k-secret-i-gave-away": {
+      "views": 294,
+      "opened": 49,
+      "subs": 0
+    },
+    "https://irreplaceablepositioning.substack.com/p/the-11-8-million-mistake": {
+      "views": 272,
+      "opened": 46,
+      "subs": 1
+    },
+    "https://irreplaceablepositioning.substack.com/p/making-your-business-irreplaceable": {
+      "views": 145,
+      "opened": 62,
+      "subs": 4
+    },
+    "https://irreplaceablepositioning.substack.com/p/why-breakthrough-advertising": {
+      "views": 150,
+      "opened": 49,
+      "subs": 9
+    }
+  },
+  "note": "Update the URLs to match your actual article URLs from Substack. The slug format may differ."
+}
+

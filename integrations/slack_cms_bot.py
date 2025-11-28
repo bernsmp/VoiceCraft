@@ -99,6 +99,10 @@ def create_app():
         channel = event.get("channel", "")
         thread_ts = event.get("ts")
         
+        # Debug logging
+        print(f"📩 Received message: '{message}' from user: {user} in channel: {channel}")
+        print(f"🔍 Is website edit? {_is_website_edit(message) if message else False}")
+        
         if message and _is_website_edit(message):
             result = editor.process_command(message)
             

@@ -111,9 +111,12 @@ def create_app():
         """Handle Slack Events API"""
         data = request.json
         
-        # URL verification challenge
+        # URL verification challenge - Slack requires plaintext response
         if data.get("type") == "url_verification":
-            return jsonify({"challenge": data.get("challenge")})
+            challenge = data.get("challenge", "")
+            # Return plaintext challenge as Slack requires
+            from flask import Response
+            return Response(challenge, mimetype='text/plain', status=200)
         
         # Handle message events
         event = data.get("event", {})

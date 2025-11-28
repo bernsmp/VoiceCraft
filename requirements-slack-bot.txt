@@ -1,0 +1,21 @@
+# Minimal requirements for Slack Bot Server only
+# This avoids installing heavy ML dependencies (PyTorch, CUDA, etc.)
+
+# Web Framework
+flask>=3.0.0
+
+# Slack Integration
+slack-sdk>=3.27.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# LLM Parsing (for natural language commands)
+anthropic>=0.18.0
+
+# Utilities
+pyyaml>=6.0.0
+

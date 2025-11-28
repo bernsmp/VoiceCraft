@@ -51,7 +51,13 @@ def create_app():
     editor = WebsiteEditor("louie")
     
     slack_token = os.getenv('SLACK_BOT_TOKEN')
+    if not slack_token:
+        print("⚠️  SLACK_BOT_TOKEN not set!")
+    if not SLACK_SDK_AVAILABLE:
+        print("⚠️  slack_sdk not available!")
+    
     slack_client = WebClient(token=slack_token) if slack_token and SLACK_SDK_AVAILABLE else None
+    print(f"✅ Slack client initialized: {slack_client is not None}")
     
     pending_confirmations = {}
     

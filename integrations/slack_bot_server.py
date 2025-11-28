@@ -70,19 +70,17 @@ def create_app():
             if request.path == "/slack/interactive":
                 return None
             
-            # Skip verification for URL verification challenge (no signature yet)
+            # Skip verification for URL verification challenge (no signature header)
             if request.path == "/slack/events" and request.method == "POST":
-                try:
-                    data = request.get_json(silent=True) or {}
-                    if data.get("type") == "url_verification":
-                        return None  # Skip signature check for challenge
-                except:
-                    pass
+                signature = request.headers.get("X-Slack-Signature", "")
+                # Challenge requests don't have signature header
+                if not signature:
+                    return None  # Skip signature check for challenge requests
             
             timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
             signature = request.headers.get("X-Slack-Signature", "")
             
-            # Skip verification if no signature (development mode)
+            # Skip verification if no signature (development mode or challenge)
             if not signature:
                 return None
             

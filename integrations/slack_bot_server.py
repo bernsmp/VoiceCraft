@@ -163,6 +163,18 @@ def create_app():
             # Even if JSON encoding fails, return a simple response
             return "OK", 200
     
+    @app.route("/ ", methods=["GET"])  # Route with space - Flask decodes %20 to space
+    def health_with_space():
+        """Health check endpoint that handles Render's space-in-path issue"""
+        try:
+            return jsonify({
+                "status": "healthy",
+                "service": "VoiceCraft Slack Bot",
+                "version": "1.0.0",
+            }), 200
+        except Exception as e:
+            return "OK", 200
+    
     @app.route("/healthz", methods=["GET"])
     def healthz():
         """Alternative health check endpoint (common convention)"""

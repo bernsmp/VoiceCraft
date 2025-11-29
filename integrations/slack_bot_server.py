@@ -217,7 +217,7 @@ def create_app():
         message = event.get("text", "")
         user = event.get("user", "")
         channel = event.get("channel", "")
-        thread_ts = event.get("ts")  # For threading replies
+        thread_ts = event.get("thread_ts")  # Get thread timestamp if message is in a thread
         
         # Debug logging
         print(f"📩 Received event: user={user}, channel={channel}, message='{message[:50]}...'")
@@ -229,7 +229,7 @@ def create_app():
         
         try:
             # Process the message (lazy load bot if needed)
-            result = get_bot().process_slack_message(message, user, channel, thread_ts)
+            result = get_bot().process_slack_message(message, user, channel, thread_ts=thread_ts)
             print(f"✅ Processed message, result keys: {list(result.keys()) if isinstance(result, dict) else 'not a dict'}")
             
             # Post response back to Slack

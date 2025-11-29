@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "name": "Louie Bernstein",
+    "description": "Sales consultant and fractional sales leader - Enhanced with Sunday Starter newsletters and LinkedIn posts",
+    "tags": [
+      "sales",
+      "consulting",
+      "leadership",
+      "newsletters",
+      "linkedin"
+    ],
+    "created_at": "2025-11-28T03:35:12.330903",
+    "updated_at": "2025-11-28T03:35:12.330910",
+    "version": "1.0"
+  },
+  "style": {
+    "name": "Louie Bernstein",
+    "sentence_structure": {
+      "avg_sentence_length": 10.21,
+      "fragment_ratio": 0.215,
+      "question_frequency": 0.0,
+      "exclamation_frequency": 0.0,
+      "sentence_count": 548,
+      "length_variance": 58.49
+    },
+    "vocabulary": {
+      "avg_word_length": 4.4,
+      "reading_ease_score": 0,
+      "grade_level": 0,
+      "total_words": 5592,
+      "unique_words": 1574,
+      "lexical_diversity": 0.281,
+      "power_word_density": 0.0016
+    },
+    "rhetorical_devices": {
+      "repetition_for_emphasis": 0.074,
+      "contrast_usage": 0.017,
+      "rule_of_threes": 0.011
+    },
+    "emotional_tone": {
+      "sentiment_polarity": 0,
+      "subjectivity": 0.5,
+      "urgency_level": 0.0018,
+      "confidence_level": 0.0063
+    },
+    "content_flow": {
+      "hook_distribution": {
+        "question": 0.18,
+        "statistic": 0.22,
+        "bold_claim": 0.1,
+        "story": 0.06
+      },
+      "avg_paragraph_length": 25.55
+    },
+    "sample_count": 50,
+    "total_words": 5592
+  },
+  "samples": {
+    "count": 50,
+    "total_words": 5592,
+    "excerpts": [
+      "The Sunday Starter\n\nFor those who can't wait \u2018til Monday.\n\nIntroduction - 4-3-2022\n\nIf you\u2019re watching this on Sunday, we already have something in common:  We like getting a jump on the week.\n\nI\u2019m Louie Bernstein and I want to thank you for taking time out of your day to watch this inaugural edition of the Sunday Starter.\n\nI plan to keep these video newsletters to three minutes or less.  But since this is the first edition, it will be just a bit longer, because I\u2019d like to give you a little bac",
+      "I was into the seventh month of the sale cycle when I found myself one day unable to move, sitting in my car in the office parking lot and thinking:\n\n- I\u2019m not sure I\u2019m going to get this deal closed.\n\n- If I don\u2019t win this deal, I may get fired.\n\n- If I lose, my reputation will be badly damaged, and I may not get another job.\n\n- Plus, I won\u2019t get promoted.\n\n- Maybe I should just quit now.\n\nTo add to the pressure, I had just bought my first house and our first child was on the way.\u00a0 What would th",
+      "So that\u2019s what this first Sunday Starter is about.  It\u2019s about not only staying in the game but excelling at it.\n\nThe Sunday Starter is about YOU.  And how you can excel at the business game, no matter where you are right now on your journey.  We all start at a different place.   Regardless, the key is to start.\n\nI believe the mind is what separates really successful business people (or salespeople), from those who don\u2019t reach their full potential.\n\nThis is what I call, The Iceberg Effect.\n\nYou "
+    ]
+  }
+}

@@ -46,10 +46,13 @@ class ContentWorkflow:
         self.humanizer = Humanizer(profile_name=profile_name)
         self.profiler = VoiceProfiler()
         
-        # Load voice profile
+        # Load voice profile (gracefully handle missing profile)
         self.voice_profile = self.profiler.load_profile(profile_name)
         if not self.voice_profile:
-            raise ValueError(f"Profile '{profile_name}' not found")
+            print(f"⚠️  Warning: Profile '{profile_name}' not found. Using empty profile.")
+            print(f"   Profile path: {self.profiler._get_profile_path(profile_name)}")
+            print(f"   Available profiles: {[p.stem for p in self.profiler.profiles_dir.glob('*.json')]}")
+            self.voice_profile = {}  # Use empty profile instead of failing
     
     def process_input(
         self,

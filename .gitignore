@@ -47,6 +47,9 @@ styles/custom/*
 !data/outputs/.gitkeep
 !styles/custom/.gitkeep
 
+# Keep Louie's profile (needed for deployment)
+!data/voices/louie_bernstein.json
+
 # Logs
 *.log
 logs/

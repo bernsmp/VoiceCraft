@@ -229,10 +229,19 @@ def create_app():
         
         try:
             # Process the message (lazy load bot if needed)
+            kwargs = {}
             if thread_ts:
-                result = get_bot().process_slack_message(message, user, channel, thread_ts=thread_ts)
-            else:
-                result = get_bot().process_slack_message(message, user, channel)
+                kwargs["thread_ts"] = thread_ts
+            
+            try:
+                result = get_bot().process_slack_message(message, user, channel, **kwargs)
+            except TypeError as e:
+                # Handle older deployments that don't yet accept thread_ts
+                if "thread_ts" in str(e):
+                    print("⚠️  Bot missing thread_ts support, retrying without it")
+                    result = get_bot().process_slack_message(message, user, channel)
+                else:
+                    raise
             print(f"✅ Processed message, result keys: {list(result.keys()) if isinstance(result, dict) else 'not a dict'}")
             
             # Post response back to Slack

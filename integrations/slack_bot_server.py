@@ -22,8 +22,17 @@ import hmac
 import hashlib
 import time
 
-from integrations.slack_bot import SlackContentBot
-from integrations.deploy_webhook import trigger_deploy_and_notify, payload_webhook_handler
+# Lazy import to avoid blocking health checks
+try:
+    from integrations.slack_bot import SlackContentBot
+    from integrations.deploy_webhook import trigger_deploy_and_notify, payload_webhook_handler
+    SLACK_BOT_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️  Warning: Could not import SlackContentBot: {e}")
+    SLACK_BOT_AVAILABLE = False
+    SlackContentBot = None
+    trigger_deploy_and_notify = None
+    payload_webhook_handler = None
 
 try:
     from slack_sdk import WebClient
@@ -53,14 +62,60 @@ def verify_slack_signature(request_data, timestamp, signature):
 def create_app():
     """Create and configure the Flask application"""
     app = Flask(__name__)
-    bot = SlackContentBot("Louie Bernstein")
+    # Lazy load bot to avoid import errors blocking health checks
+    bot = None
+    
+    def get_bot():
+        """Lazy load bot instance"""
+        nonlocal bot
+        if bot is None:
+            if not SLACK_BOT_AVAILABLE or SlackContentBot is None:
+                # Return a mock bot if imports failed
+                class MockBot:
+                    def process_slack_message(self, *args, **kwargs):
+                        return {"text": "⚠️ Bot module not available. Check dependencies."}
+                    def _do_site_edit(self, *args, **kwargs):
+                        return {"success": False, "message": "Bot module not available"}
+                bot = MockBot()
+            else:
+                try:
+                    bot = SlackContentBot("Louie Bernstein")
+                except Exception as e:
+                    print(f"⚠️  Warning: Failed to initialize bot: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    # Return a mock bot that handles errors gracefully
+                    class MockBot:
+                        def process_slack_message(self, *args, **kwargs):
+                            return {"text": f"⚠️ Bot initialization failed: {str(e)[:100]}. Check logs."}
+                        def _do_site_edit(self, *args, **kwargs):
+                            return {"success": False, "message": f"Bot initialization failed: {str(e)[:100]}"}
+                    bot = MockBot()
+        return bot
     
     # Initialize Slack WebClient for posting responses
     slack_token = os.getenv('SLACK_BOT_TOKEN')
+    if not slack_token:
+        print("⚠️  WARNING: SLACK_BOT_TOKEN not set. Bot will not be able to post messages.")
+    elif not SLACK_SDK_AVAILABLE:
+        print("⚠️  WARNING: slack-sdk not installed. Install with: pip install slack-sdk")
+    
     slack_client = WebClient(token=slack_token) if slack_token and SLACK_SDK_AVAILABLE else None
+    
+    if slack_client:
+        try:
+            # Test the connection
+            auth_test = slack_client.auth_test()
+            print(f"✅ Slack bot connected: {auth_test.get('user', 'unknown')}")
+        except Exception as e:
+            print(f"⚠️  Slack connection test failed: {e}")
+            slack_client = None
     
     # In-memory store for pending confirmations (production: use Redis)
     pending_confirmations = {}
+    
+    # Track processed events to prevent duplicates (Slack can retry events)
+    processed_events = set()
     
     @app.before_request
     def verify_request():
@@ -97,12 +152,16 @@ def create_app():
     
     @app.route("/", methods=["GET"])
     def health():
-        """Health check endpoint"""
-        return jsonify({
-            "status": "healthy",
-            "service": "VoiceCraft Slack Bot",
-            "version": "1.0.0",
-        })
+        """Health check endpoint - must always respond for Render health checks"""
+        try:
+            return jsonify({
+                "status": "healthy",
+                "service": "VoiceCraft Slack Bot",
+                "version": "1.0.0",
+            }), 200
+        except Exception as e:
+            # Even if JSON encoding fails, return a simple response
+            return "OK", 200
     
     @app.route("/slack/events", methods=["POST"])
     def handle_events():
@@ -123,14 +182,37 @@ def create_app():
         if event.get("bot_id") or event.get("subtype") == "message_changed":
             return jsonify({"status": "ok"})
         
+        # Deduplication: Check if we've already processed this event
+        event_ts = event.get("ts")  # Unique timestamp for each event
+        if event_ts and event_ts in processed_events:
+            # Already processed, just acknowledge
+            return jsonify({"status": "ok"})
+        
+        # Mark as processed (keep last 1000 events to prevent memory bloat)
+        if event_ts:
+            processed_events.add(event_ts)
+            if len(processed_events) > 1000:
+                # Remove oldest entries (simple cleanup - convert to list, remove first)
+                oldest = min(processed_events)
+                processed_events.remove(oldest)
+        
         message = event.get("text", "")
         user = event.get("user", "")
         channel = event.get("channel", "")
         thread_ts = event.get("ts")  # For threading replies
         
-        # Only process direct messages or mentions
-        if message:
-            result = bot.process_slack_message(message, user, channel)
+        # Debug logging
+        print(f"📩 Received event: user={user}, channel={channel}, message='{message[:50]}...'")
+        
+        # Only process if we have a message
+        if not message:
+            print("⚠️  No message text in event")
+            return jsonify({"status": "ok"})
+        
+        try:
+            # Process the message (lazy load bot if needed)
+            result = get_bot().process_slack_message(message, user, channel, thread_ts)
+            print(f"✅ Processed message, result keys: {list(result.keys()) if isinstance(result, dict) else 'not a dict'}")
             
             # Post response back to Slack
             if slack_client:
@@ -141,7 +223,8 @@ def create_app():
                         pending_confirmations[confirmation_id] = {
                             'result': result,
                             'user': user,
-                            'channel': channel
+                            'channel': channel,
+                            'command': result.get('command')  # Store original command for re-execution
                         }
                         
                         # Build confirmation blocks
@@ -167,47 +250,88 @@ def create_app():
                             }
                         ]
                         
-                        slack_client.chat_postMessage(
+                        response = slack_client.chat_postMessage(
                             channel=channel,
                             thread_ts=thread_ts,
                             text=result.get('text', 'Preview'),
                             blocks=blocks
                         )
+                        print(f"✅ Posted preview message: {response.get('ts', 'no ts')}")
                     else:
                         # Post directly (non-edit commands or errors)
-                        slack_client.chat_postMessage(
+                        response = slack_client.chat_postMessage(
                             channel=channel,
                             thread_ts=thread_ts,
-                            text=result.get('text', ''),
+                            text=result.get('text', 'Response'),
                             blocks=result.get('blocks')
                         )
+                        print(f"✅ Posted response message: {response.get('ts', 'no ts')}")
                 except SlackApiError as e:
-                    print(f"⚠️  Slack API error: {e.response['error']}")
+                    error_msg = e.response.get('error', 'unknown error') if hasattr(e, 'response') else str(e)
+                    print(f"❌ Slack API error: {error_msg}")
+                    # Try to send a simple error message
+                    try:
+                        slack_client.chat_postMessage(
+                            channel=channel,
+                            text=f"⚠️ Error: {error_msg}"
+                        )
+                    except:
+                        pass
+                except Exception as e:
+                    print(f"❌ Unexpected error posting to Slack: {e}")
+                    import traceback
+                    traceback.print_exc()
             else:
                 # Fallback: print to console
-                print(f"Response: {json.dumps(result, indent=2)}")
+                print(f"⚠️  No Slack client available. Response would be: {json.dumps(result, indent=2)}")
+        except Exception as e:
+            print(f"❌ Error processing message: {e}")
+            import traceback
+            traceback.print_exc()
+            # Try to send error to Slack if possible
+            if slack_client:
+                try:
+                    slack_client.chat_postMessage(
+                        channel=channel,
+                        text=f"❌ Error processing your message: {str(e)[:200]}"
+                    )
+                except:
+                    pass
         
         return jsonify({"status": "ok"})
     
     @app.route("/slack/commands", methods=["POST"])
     def handle_commands():
         """Handle Slack slash commands"""
-        command = request.form.get("command", "")
-        text = request.form.get("text", "")
-        user_id = request.form.get("user_id", "")
-        channel_id = request.form.get("channel_id", "")
-        
-        # Combine command and text
-        full_message = f"{command} {text}".strip()
-        
-        # Process the command
-        result = bot.process_slack_message(full_message, user_id, channel_id)
-        
-        # Return response (Slack will display this)
-        return jsonify({
-            "response_type": "in_channel",  # or "ephemeral" for private
-            **result
-        })
+        try:
+            command = request.form.get("command", "")
+            text = request.form.get("text", "")
+            user_id = request.form.get("user_id", "")
+            channel_id = request.form.get("channel_id", "")
+            
+            print(f"📩 Received command: {command} {text} from user {user_id}")
+            
+            # Combine command and text
+            full_message = f"{command} {text}".strip()
+            
+            # Process the command (lazy load bot if needed)
+            result = get_bot().process_slack_message(full_message, user_id, channel_id)
+            
+            print(f"✅ Processed command, returning response")
+            
+            # Return response (Slack will display this)
+            return jsonify({
+                "response_type": "in_channel",  # or "ephemeral" for private
+                **result
+            })
+        except Exception as e:
+            print(f"❌ Error handling command: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                "response_type": "ephemeral",
+                "text": f"❌ Error: {str(e)[:200]}"
+            })
     
     @app.route("/slack/interactive", methods=["POST"])
     def handle_interactive():
@@ -238,16 +362,20 @@ def create_app():
                 if action_id == "confirm_change" and confirmation_id in pending_confirmations:
                     # Apply the change
                     conf = pending_confirmations.pop(confirmation_id)
-                    command = conf.get('command')
+                    original_command = conf.get('command')
                     preview_result = conf.get('result')
                     
-                    # The WebsiteEditor.process_command already executed the change
-                    # So we just need to confirm it worked and update the message
+                    # Re-execute the command with preview_only=False to actually apply it
+                    if original_command:
+                        apply_result = get_bot()._do_site_edit(original_command, preview_only=False)
+                    else:
+                        apply_result = preview_result  # Fallback if no command stored
+                    
                     if slack_client:
                         try:
                             # Update the original message to show it was applied
-                            success_text = f"✅ Change applied! {preview_result.get('message', '')}"
-                            blocks = preview_result.get('blocks', []) if isinstance(preview_result, dict) else []
+                            success_text = f"✅ Change applied! {apply_result.get('text', preview_result.get('message', 'Change applied!'))}"
+                            blocks = apply_result.get('blocks', preview_result.get('blocks', [])) if isinstance(apply_result, dict) else preview_result.get('blocks', [])
                             
                             # Replace preview text with success in blocks
                             updated_blocks = []

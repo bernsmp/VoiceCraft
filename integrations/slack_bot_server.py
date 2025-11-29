@@ -279,20 +279,23 @@ def create_app():
                                 ]
                             }
                         ]
+                        fallback_text = 'Preview ready' if blocks else result.get('text', 'Preview')
                         
                         response = slack_client.chat_postMessage(
                             channel=channel,
                             thread_ts=thread_ts,
-                            text=result.get('text', 'Preview'),
+                            text=fallback_text,
                             blocks=blocks
                         )
                         print(f"✅ Posted preview message: {response.get('ts', 'no ts')}")
                     else:
                         # Post directly (non-edit commands or errors)
+                        fallback_text = 'Response ready' if result.get('blocks') else result.get('text', 'Response')
+                        
                         response = slack_client.chat_postMessage(
                             channel=channel,
                             thread_ts=thread_ts,
-                            text=result.get('text', 'Response'),
+                            text=fallback_text,
                             blocks=result.get('blocks')
                         )
                         print(f"✅ Posted response message: {response.get('ts', 'no ts')}")

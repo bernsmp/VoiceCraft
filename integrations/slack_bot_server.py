@@ -229,7 +229,10 @@ def create_app():
         
         try:
             # Process the message (lazy load bot if needed)
-            result = get_bot().process_slack_message(message, user, channel, thread_ts=thread_ts)
+            if thread_ts:
+                result = get_bot().process_slack_message(message, user, channel, thread_ts=thread_ts)
+            else:
+                result = get_bot().process_slack_message(message, user, channel)
             print(f"✅ Processed message, result keys: {list(result.keys()) if isinstance(result, dict) else 'not a dict'}")
             
             # Post response back to Slack

@@ -81,15 +81,16 @@ def create_app():
                 try:
                     bot = SlackContentBot("Louie Bernstein")
                 except Exception as e:
+                    error_msg = str(e)[:100]  # Capture error message in local variable
                     print(f"⚠️  Warning: Failed to initialize bot: {e}")
                     import traceback
                     traceback.print_exc()
                     # Return a mock bot that handles errors gracefully
                     class MockBot:
                         def process_slack_message(self, *args, **kwargs):
-                            return {"text": f"⚠️ Bot initialization failed: {str(e)[:100]}. Check logs."}
+                            return {"text": f"⚠️ Bot initialization failed: {error_msg}. Check logs."}
                         def _do_site_edit(self, *args, **kwargs):
-                            return {"success": False, "message": f"Bot initialization failed: {str(e)[:100]}"}
+                            return {"success": False, "message": f"Bot initialization failed: {error_msg}"}
                     bot = MockBot()
         return bot
     

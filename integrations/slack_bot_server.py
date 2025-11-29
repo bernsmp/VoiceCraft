@@ -163,6 +163,11 @@ def create_app():
             # Even if JSON encoding fails, return a simple response
             return "OK", 200
     
+    @app.route("/healthz", methods=["GET"])
+    def healthz():
+        """Alternative health check endpoint (common convention)"""
+        return "OK", 200
+    
     @app.route("/slack/events", methods=["POST"])
     def handle_events():
         """Handle Slack Events API"""

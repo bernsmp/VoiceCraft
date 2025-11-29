@@ -11,7 +11,7 @@ This module handles:
 import json
 import os
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from datetime import datetime
 
 from .style_analyzer import StyleAnalyzer, StyleProfile

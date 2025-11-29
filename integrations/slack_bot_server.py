@@ -433,8 +433,17 @@ def create_app():
                                 blocks=updated_blocks if updated_blocks else None
                             )
                             
-                            # Optionally trigger deployment notification
-                            # trigger_deploy_and_notify(channel, "Website content updated")
+                            # Trigger deploy + notify Slack if hook configured
+                            if trigger_deploy_and_notify:
+                                try:
+                                    deploy_started = trigger_deploy_and_notify(
+                                        slack_channel=channel,
+                                        user_id=user
+                                    )
+                                    status = "started" if deploy_started else "skipped"
+                                    print(f"🚀 Deploy {status} after change confirmation")
+                                except Exception as deploy_error:
+                                    print(f"⚠️  Deploy trigger failed: {deploy_error}")
                             
                         except SlackApiError as e:
                             print(f"⚠️  Slack update error: {e.response['error']}")
